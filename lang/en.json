@@ -1,6 +1,6 @@
 {
 	"m_title" : "MQTT",
-	"m_descr" : "Sends changes in metrics through MQTT",
+	"m_descr" : "Publishes the status of devices to a MQTT topic and is able to set values based on subscribed topics.",
 
 	"client_id_label": "Client ID",
 	"host_label": "Hostname or IP address",
