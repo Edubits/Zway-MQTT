@@ -1,0 +1,31 @@
+{
+	"m_title" : "MQTT",
+	"m_descr" : "Sends changes in metrics through MQTT",
+
+	"client_id_label": "Client ID",
+	"host_label": "Hostname or IP address",
+	"port_label": "Port",
+	"user_label": "Username",
+	"password_label": "Password",
+	"topic_prefix_label": "Topic prefix",
+	"topic_postfix_status_label": "Topic postfix for requesting status",
+	"topic_postfix_status_helper": "Publish an empty message to the status-topic of a device to force a publication of the status",
+	"topic_postfix_set_label": "Topic postfix for setting the value",
+	"topic_postfix_set_helper": "Publish a message to the set-topic of a device to set it's value",
+
+	"publications_label": "Publications",
+	"publications_helper": "Configure for which devices the status will be published to a MQTT topic",
+
+	"type_label": "Type",
+	"type_choose": "Choose the type of publication",
+	"type_single": "Single device",
+	"type_tag": "Tagged devices",
+
+	"device_id_label": "Device",
+	"device_id_choose": "Select a device",
+	"tags_label": "Tags",
+	"tags_helper": "All devices with this tag will be used",
+	"topic_label": "Topic",
+	"topic_helper": "You can use %deviceName% and %roomName% to get those automatically filled in. The names will camel cased.",
+	"retained_label": "Retained?"
+}
