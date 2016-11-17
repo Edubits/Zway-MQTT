@@ -105,7 +105,7 @@ MQTT.prototype.initMQTTClient = function () {
 
 	self.client.onDisconnect(function () {
 		self.error("Disconnected, will retry to connect...");
-		self.connect();
+		self.client.reconnect();
 	});
 };
 
