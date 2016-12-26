@@ -59,8 +59,6 @@ MQTT.prototype.initMQTTClient = function () {
 	executeFile(self.moduleBasePath() + "/lib/buffer.js");
 	executeFile(self.moduleBasePath() + "/lib/mqtt.js");
 
-//	self.log(self.config.host, parseInt(self.config.port), self.config.clientId, self.config.user, self.config.password );
-
 	self.client  = new MQTTClient(self.config.host, parseInt(self.config.port), {client_id: self.config.clientId, username: self.config.user, password: self.config.password });
 
 	self.client.connect(function () {
