@@ -19,7 +19,7 @@
 	"maturity": "stable",
 	"moduleName": "MQTT",
 	"singleton": false,
-	"version": 1.0,
+	"version": 1.1,
 	"repository": {
 		"source": "https://github.com/Edubits/Zway-MQTT",
 		"type": "git"
