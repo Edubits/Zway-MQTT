@@ -58,8 +58,8 @@ MQTT.prototype.initMQTTClient = function () {
 
 	executeFile(self.moduleBasePath() + "/lib/buffer.js");
 	executeFile(self.moduleBasePath() + "/lib/mqtt.js");
-	
-	self.client  = new MQTTClient(self.config.host, parseInt(self.config.port), {client_id: self.config.clientId});
+
+	self.client  = new MQTTClient(self.config.host, parseInt(self.config.port), {client_id: self.config.clientId, username: self.config.user, password: self.config.password });
 
 	self.client.connect(function () {
 		self.log("Connected to " + self.config.host);
@@ -90,6 +90,8 @@ MQTT.prototype.initMQTTClient = function () {
 						if (deviceType === "switchMultilevel" && payload !== "on" && payload !== "off") {
 							self.log();
 							device.performCommand("exact", {level: payload + "%"});
+						} else if (deviceType === "thermostat") {
+							device.performCommand("exact", {level: payload});
 						} else {
 							device.performCommand(payload);
 						}
@@ -105,7 +107,7 @@ MQTT.prototype.initMQTTClient = function () {
 
 	self.client.onDisconnect(function () {
 		self.error("Disconnected, will retry to connect...");
-		self.connect();
+		self.client.reconnect();
 	});
 };
 
