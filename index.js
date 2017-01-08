@@ -71,6 +71,8 @@ MQTT.prototype.initMQTTClient = function () {
 
 	self.client.connect(function () {
 		self.log("Connected to " + self.config.host);
+		self.isConnecting = false;
+		self.reconnectCount = 0;
 
 		self.client.subscribe(self.createTopic("/#"), {}, function (topic, payload) {
 			var topic = topic.toString();
@@ -113,8 +115,20 @@ MQTT.prototype.initMQTTClient = function () {
 	});
 
 	self.client.onDisconnect(function () {
-		self.error("Disconnected, will retry to connect...");
-		self.client.reconnect();
+		if (this.isConnecting) {
+			return;
+		}
+
+		if (self.reconnectCount == 0) {
+			self.error("Disconnected, will retry to connect...");
+		}
+
+		self.isConnecting = true;
+		self.reconnectCount++;
+		setTimeout(function() {
+			self.log("Trying to reconnect (" + self.reconnectCount + ")");
+			self.client.reconnect();
+		}, Math.min(self.reconnectCount * 1000, 60000));
 	});
 };
 
