@@ -7,6 +7,8 @@
 		"clientId": "zway",
 		"host": "localhost",
 		"port": "1883",
+		"user": "none",
+		"password": "none",
 		"topicPrefix": "zway",
 		"topicPostfixStatus": "status",
 		"topicPostfixSet": "set"
@@ -40,10 +42,12 @@
 			},
 			"user": {
 				"label": "__user_label__",
+				"helper": "__user_helper__",
 				"order": 4
 			},
 			"password": {
 				"label": "__password_label__",
+				"helper": "__password_helper__",
 				"order": 5
 			},
 			"topicPrefix": {
