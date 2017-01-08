@@ -88,7 +88,6 @@ MQTT.prototype.initMQTTClient = function () {
 						}
 
 						if (deviceType === "switchMultilevel" && payload !== "on" && payload !== "off") {
-							self.log();
 							device.performCommand("exact", {level: payload + "%"});
 						} else if (deviceType === "thermostat") {
 							device.performCommand("exact", {level: payload});
