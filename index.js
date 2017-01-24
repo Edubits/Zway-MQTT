@@ -59,10 +59,20 @@ MQTT.prototype.initMQTTClient = function () {
 	executeFile(self.moduleBasePath() + "/lib/buffer.js");
 	executeFile(self.moduleBasePath() + "/lib/mqtt.js");
 
-	self.client  = new MQTTClient(self.config.host, parseInt(self.config.port), {client_id: self.config.clientId, username: self.config.user, password: self.config.password });
+	var mqttOptions = {client_id: self.config.clientId};
+	if (self.config.user != "none") {
+		mqttOptions.username = self.config.user;
+	}
+	if (self.config.password != "none") {
+		mqttOptions.password = self.config.password;
+	}
+
+	self.client  = new MQTTClient(self.config.host, parseInt(self.config.port), mqttOptions);
 
 	self.client.connect(function () {
 		self.log("Connected to " + self.config.host);
+		self.isConnecting = false;
+		self.reconnectCount = 0;
 
 		self.client.subscribe(self.createTopic("/#"), {}, function (topic, payload) {
 			var topic = topic.toString();
@@ -88,7 +98,6 @@ MQTT.prototype.initMQTTClient = function () {
 						}
 
 						if (deviceType === "switchMultilevel" && payload !== "on" && payload !== "off") {
-							self.log();
 							device.performCommand("exact", {level: payload + "%"});
 						} else if (deviceType === "thermostat") {
 							device.performCommand("exact", {level: payload});
@@ -106,8 +115,20 @@ MQTT.prototype.initMQTTClient = function () {
 	});
 
 	self.client.onDisconnect(function () {
-		self.error("Disconnected, will retry to connect...");
-		self.client.reconnect();
+		if (this.isConnecting) {
+			return;
+		}
+
+		if (self.reconnectCount == 0) {
+			self.error("Disconnected, will retry to connect...");
+		}
+
+		self.isConnecting = true;
+		self.reconnectCount++;
+		setTimeout(function() {
+			self.log("Trying to reconnect (" + self.reconnectCount + ")");
+			self.client.reconnect();
+		}, Math.min(self.reconnectCount * 1000, 60000));
 	});
 };
 
