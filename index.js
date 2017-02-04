@@ -39,12 +39,16 @@ MQTT.prototype.init = function (config) {
 
 	self.callback = _.bind(self.updateDevice, self);
 	self.controller.devices.on("modify:metrics:level", self.callback);
+
+	self.callbackToggle = _.bind(self.updateToggleDevice, self);
+	self.controller.devices.on("change:metrics:level", self.callbackToggle);
 };
 
 MQTT.prototype.stop = function () {
 	var self = this;
 
 	self.controller.devices.off("modify:metrics:level", self.callback);
+	self.controller.devices.off("change:metrics:level", self.callbackToggle);
 
     MQTT.super_.prototype.stop.call(this);
 };
@@ -149,6 +153,27 @@ MQTT.prototype.updateDevice = function (device) {
 		var topic = self.createTopic(publication.topic, device);
 
 		self.publish(topic, value, publication.retained);
+	});
+};
+
+/**
+ * The value of toggleButtons doesn't change, so we have to check all level changes.
+ * For that reason these updates are never retained.
+ */
+MQTT.prototype.updateToggleDevice = function (device) {
+	var self = this;
+
+	var value = device.get("metrics:level");
+	var deviceType = device.get("deviceType");
+
+	if (deviceType != "toggleButton") {
+		return;
+	}
+
+	self.processPublicationsForDevice(device, function (device, publication) {
+		var topic = self.createTopic(publication.topic, device);
+
+		self.publish(topic, value, false);
 	});
 };
 
