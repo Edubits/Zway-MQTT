@@ -134,16 +134,24 @@ MQTT.prototype.initMQTTClient = function () {
 
 MQTT.prototype.updateDevice = function (device) {
 	var self = this;
+        var level = device.get("metrics:level");
 
-	var value = device.get("metrics:level");
+        var value = self.findRoom(device.get("location")).title;
+        value += ',';
+        value += device.get("metrics:title");
+        value += ',';
 
 	if (device.get("deviceType") == "switchBinary" || device.get("deviceType") == "sensorBinary") {
-		if (value == 0) {
-			value = "off";
-		} else if (value == 255) {
-			value = "on";
-		}
-	}
+		if (level == 0) {
+			value += "off";
+		} else if (level == 255) {
+			value += "on";
+		} else {
+                        value += level;
+                }
+	} else {
+                value += level;
+        }
 
 	self.processPublicationsForDevice(device, function (device, publication) {
 		var topic = self.createTopic(publication.topic, device);
