@@ -38,13 +38,22 @@ MQTT.prototype.init = function (config) {
 	self.initMQTTClient();
 
 	self.callback = _.bind(self.updateDevice, self);
+	
+	if (self.config.ignore) {
 	self.controller.devices.on("modify:metrics:level", self.callback);
+	} else {
+	self.controller.devices.on("change:metrics:level", self.callback);
+	}
 };
 
 MQTT.prototype.stop = function () {
 	var self = this;
 
+	if (self.config.ignore) {
 	self.controller.devices.off("modify:metrics:level", self.callback);
+	} else {
+	self.controller.devices.off("change:metrics:level", self.callback);
+	}
 
     MQTT.super_.prototype.stop.call(this);
 };
