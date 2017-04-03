@@ -1,6 +1,6 @@
 /*** MQTT Z-Way HA module ****************************************************
 
-Version: 1.0
+Version: 1.3
 (c) Robin Eggenkamp, 2016
 -----------------------------------------------------------------------------
 Author: Robin Eggenkamp <robin@edubits.nl>
@@ -45,8 +45,9 @@ MQTT.prototype.init = function (config) {
     // Init MQTT client
 	self.initMQTTClient();
 
+	var event = self.config.ignore ? "change:metrics:level" : "modify:metrics:level";
 	self.callback = _.bind(self.updateDevice, self);
-	self.controller.devices.on("modify:metrics:level", self.callback);
+	self.controller.devices.on(event, self.callback);
 
 	self.callbackToggle = _.bind(self.updateToggleDevice, self);
 	self.controller.devices.on("change:metrics:level", self.callbackToggle);
@@ -55,7 +56,9 @@ MQTT.prototype.init = function (config) {
 MQTT.prototype.stop = function () {
 	var self = this;
 
-	self.controller.devices.off("modify:metrics:level", self.callback);
+	var event = self.config.ignore ? "change:metrics:level" : "modify:metrics:level";
+	self.controller.devices.off(event, self.callback);
+
 	self.controller.devices.off("change:metrics:level", self.callbackToggle);
 
 	// Cleanup
@@ -147,6 +150,11 @@ MQTT.prototype.updateDevice = function (device) {
 	var self = this;
 
 	var value = device.get("metrics:level");
+	var deviceType = device.get("deviceType");
+
+	if (deviceType == "toggleButton") {
+		return;
+	}
 
 	if (device.get("deviceType") == "switchBinary" || device.get("deviceType") == "sensorBinary") {
 		if (value == 0) {
