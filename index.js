@@ -75,7 +75,7 @@ MQTT.prototype.initMQTTClient = function () {
 	if (self.config.password != "none")
 		mqttOptions.password = self.config.password;
 
-	mqttOptions.infoLogEnabled = true;
+	// mqttOptions.infoLogEnabled = true;
 
 	self.client = new MQTTClient(self.config.host, parseInt(self.config.port), mqttOptions);
 	self.client.onLog(function (msg) { self.log(msg.toString()); });
@@ -91,7 +91,7 @@ MQTT.prototype.initMQTTClient = function () {
                                     if (self.isConnecting === true) return;
 
                                     self.log("Trying to reconnect (" + self.reconnectCount + ")");
-                                    
+
                                     self.reconnectCount++;
                                     self.initMQTTClient();
                                 }, Math.min(self.reconnectCount * 1000, 60000));
