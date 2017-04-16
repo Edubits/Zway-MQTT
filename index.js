@@ -35,6 +35,14 @@ MQTT.prototype.init = function (config) {
 
     var self = this;
 
+    // Imports
+	executeFile(self.moduleBasePath() + "/lib/buffer.js");
+	executeFile(self.moduleBasePath() + "/lib/mqtt.js");
+
+    // Default counters
+	self.reconnectCount = 0;
+
+    // Init MQTT client
 	self.initMQTTClient();
 
 	self.callback = _.bind(self.updateDevice, self);
@@ -46,6 +54,9 @@ MQTT.prototype.stop = function () {
 
 	self.controller.devices.off("modify:metrics:level", self.callback);
 
+	// Cleanup
+	self.client.close();
+
     MQTT.super_.prototype.stop.call(this);
 };
 
@@ -55,31 +66,48 @@ MQTT.prototype.stop = function () {
 
 MQTT.prototype.initMQTTClient = function () {
 	var self = this;
-
-	executeFile(self.moduleBasePath() + "/lib/buffer.js");
-	executeFile(self.moduleBasePath() + "/lib/mqtt.js");
+    self.isConnecting = true;
 
 	var mqttOptions = {client_id: self.config.clientId};
-	if (self.config.user != "none") {
+	if (self.config.user != "none")
 		mqttOptions.username = self.config.user;
-	}
-	if (self.config.password != "none") {
-		mqttOptions.password = self.config.password;
-	}
 
-	self.client  = new MQTTClient(self.config.host, parseInt(self.config.port), mqttOptions);
+	if (self.config.password != "none")
+		mqttOptions.password = self.config.password;
+
+	mqttOptions.infoLogEnabled = true;
+
+	self.client = new MQTTClient(self.config.host, parseInt(self.config.port), mqttOptions);
+	self.client.onLog(function (msg) { self.log(msg.toString()); });
+	self.client.onError(function (error) { self.error(error.toString()); });
+	self.client.onDisconnect(function () {
+    	self.error("Disconnected, will retry to connect...");
+
+        // Reset connecting flag
+        if (self.isConnecting === true) self.isConnecting = false;
+
+        // Setup a connection retry
+		self.reconnect_timer = setTimeout(function() {
+                                    if (self.isConnecting === true) return;
+
+                                    self.log("Trying to reconnect (" + self.reconnectCount + ")");
+                                    
+                                    self.reconnectCount++;
+                                    self.initMQTTClient();
+                                }, Math.min(self.reconnectCount * 1000, 60000));
+	});
 
 	self.client.connect(function () {
 		self.log("Connected to " + self.config.host);
+
 		self.isConnecting = false;
 		self.reconnectCount = 0;
 
 		self.client.subscribe(self.createTopic("/#"), {}, function (topic, payload) {
 			var topic = topic.toString();
 
-			if (!topic.endsWith(self.config.topicPostfixStatus) && !topic.endsWith(self.config.topicPostfixSet)) {
+			if (!topic.endsWith(self.config.topicPostfixStatus) && !topic.endsWith(self.config.topicPostfixSet))
 				return;
-			}
 
 			self.controller.devices.each(function (device) {
 				self.processPublicationsForDevice(device, function (device, publication) {
@@ -108,27 +136,6 @@ MQTT.prototype.initMQTTClient = function () {
 				});
 			});
 		});
-	});
-
-	self.client.onError(function (error) {
-		self.error(error.toString());
-	});
-
-	self.client.onDisconnect(function () {
-		if (this.isConnecting) {
-			return;
-		}
-
-		if (self.reconnectCount == 0) {
-			self.error("Disconnected, will retry to connect...");
-		}
-
-		self.isConnecting = true;
-		self.reconnectCount++;
-		setTimeout(function() {
-			self.log("Trying to reconnect (" + self.reconnectCount + ")");
-			self.client.reconnect();
-		}, Math.min(self.reconnectCount * 1000, 60000));
 	});
 };
 
