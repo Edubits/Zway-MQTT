@@ -1,6 +1,6 @@
 /*** MQTT Z-Way HA module ****************************************************
 
-Version: 1.0
+Version: 1.3
 (c) Robin Eggenkamp, 2016
 -----------------------------------------------------------------------------
 Author: Robin Eggenkamp <robin@edubits.nl>
@@ -35,27 +35,38 @@ MQTT.prototype.init = function (config) {
 
     var self = this;
 
+    // Imports
+	executeFile(self.moduleBasePath() + "/lib/buffer.js");
+	executeFile(self.moduleBasePath() + "/lib/mqtt.js");
+
+    // Default counters
+	self.reconnectCount = 0;
+
+    // Init MQTT client
 	self.initMQTTClient();
 
+	var event = self.config.ignore ? "change:metrics:level" : "modify:metrics:level";
 	self.callback = _.bind(self.updateDevice, self);
-	
-	if (self.config.ignore) {
-	self.controller.devices.on("modify:metrics:level", self.callback);
-	} else {
-	self.controller.devices.on("change:metrics:level", self.callback);
-	}
+	self.controller.devices.on(event, self.callback);
+
+	self.callbackToggle = _.bind(self.updateToggleDevice, self);
+	self.controller.devices.on("change:metrics:level", self.callbackToggle);
 };
 
 MQTT.prototype.stop = function () {
 	var self = this;
 
-	if (self.config.ignore) {
-	self.controller.devices.off("modify:metrics:level", self.callback);
-	} else {
-	self.controller.devices.off("change:metrics:level", self.callback);
-	}
+	var event = self.config.ignore ? "change:metrics:level" : "modify:metrics:level";
+	self.controller.devices.off(event, self.callback);
 
-    MQTT.super_.prototype.stop.call(this);
+	self.controller.devices.off("change:metrics:level", self.callbackToggle);
+
+	// Cleanup
+	self.client.onDisconnect = undefined;
+	self.client.close();
+	self.client.onDisconnect = function () { self.onDisconnect(); };
+
+	MQTT.super_.prototype.stop.call(this);
 };
 
 // ----------------------------------------------------------------------------
@@ -64,31 +75,33 @@ MQTT.prototype.stop = function () {
 
 MQTT.prototype.initMQTTClient = function () {
 	var self = this;
-
-	executeFile(self.moduleBasePath() + "/lib/buffer.js");
-	executeFile(self.moduleBasePath() + "/lib/mqtt.js");
+    self.isConnecting = true;
 
 	var mqttOptions = {client_id: self.config.clientId};
-	if (self.config.user != "none") {
+	if (self.config.user != "none")
 		mqttOptions.username = self.config.user;
-	}
-	if (self.config.password != "none") {
-		mqttOptions.password = self.config.password;
-	}
 
-	self.client  = new MQTTClient(self.config.host, parseInt(self.config.port), mqttOptions);
+	if (self.config.password != "none")
+		mqttOptions.password = self.config.password;
+
+	// mqttOptions.infoLogEnabled = true;
+
+	self.client = new MQTTClient(self.config.host, parseInt(self.config.port), mqttOptions);
+	self.client.onLog(function (msg) { self.log(msg.toString()); });
+	self.client.onError(function (error) { self.error(error.toString()); });
+	self.client.onDisconnect(function () { self.onDisconnect(); });
 
 	self.client.connect(function () {
 		self.log("Connected to " + self.config.host);
+
 		self.isConnecting = false;
 		self.reconnectCount = 0;
 
 		self.client.subscribe(self.createTopic("/#"), {}, function (topic, payload) {
 			var topic = topic.toString();
 
-			if (!topic.endsWith(self.config.topicPostfixStatus) && !topic.endsWith(self.config.topicPostfixSet)) {
+			if (!topic.endsWith(self.config.topicPostfixStatus) && !topic.endsWith(self.config.topicPostfixSet))
 				return;
-			}
 
 			self.controller.devices.each(function (device) {
 				self.processPublicationsForDevice(device, function (device, publication) {
@@ -118,33 +131,36 @@ MQTT.prototype.initMQTTClient = function () {
 			});
 		});
 	});
+};
 
-	self.client.onError(function (error) {
-		self.error(error.toString());
-	});
+MQTT.prototype.onDisconnect = function () {
+	var self = this;
 
-	self.client.onDisconnect(function () {
-		if (this.isConnecting) {
-			return;
-		}
+	self.error("Disconnected, will retry to connect...");
 
-		if (self.reconnectCount == 0) {
-			self.error("Disconnected, will retry to connect...");
-		}
+	// Reset connecting flag
+	if (self.isConnecting === true) self.isConnecting = false;
 
-		self.isConnecting = true;
+	// Setup a connection retry
+	self.reconnect_timer = setTimeout(function() {
+		if (self.isConnecting === true) return;
+
+		self.log("Trying to reconnect (" + self.reconnectCount + ")");
+
 		self.reconnectCount++;
-		setTimeout(function() {
-			self.log("Trying to reconnect (" + self.reconnectCount + ")");
-			self.client.reconnect();
-		}, Math.min(self.reconnectCount * 1000, 60000));
-	});
+		self.initMQTTClient();
+	}, Math.min(self.reconnectCount * 1000, 60000));
 };
 
 MQTT.prototype.updateDevice = function (device) {
 	var self = this;
 
 	var value = device.get("metrics:level");
+	var deviceType = device.get("deviceType");
+
+	if (deviceType == "toggleButton") {
+		return;
+	}
 
 	if (device.get("deviceType") == "switchBinary" || device.get("deviceType") == "sensorBinary") {
 		if (value == 0) {
@@ -158,6 +174,27 @@ MQTT.prototype.updateDevice = function (device) {
 		var topic = self.createTopic(publication.topic, device);
 
 		self.publish(topic, value, publication.retained);
+	});
+};
+
+/**
+ * The value of toggleButtons doesn't change, so we have to check all level changes.
+ * For that reason these updates are never retained.
+ */
+MQTT.prototype.updateToggleDevice = function (device) {
+	var self = this;
+
+	var value = device.get("metrics:level");
+	var deviceType = device.get("deviceType");
+
+	if (deviceType != "toggleButton") {
+		return;
+	}
+
+	self.processPublicationsForDevice(device, function (device, publication) {
+		var topic = self.createTopic(publication.topic, device);
+
+		self.publish(topic, value, false);
 	});
 };
 
