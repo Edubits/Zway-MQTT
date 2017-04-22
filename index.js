@@ -62,9 +62,11 @@ MQTT.prototype.stop = function () {
 	self.controller.devices.off("change:metrics:level", self.callbackToggle);
 
 	// Cleanup
+	self.client.onDisconnect = undefined;
 	self.client.close();
+	self.client.onDisconnect = function () { self.onDisconnect(); };
 
-    MQTT.super_.prototype.stop.call(this);
+	MQTT.super_.prototype.stop.call(this);
 };
 
 // ----------------------------------------------------------------------------
@@ -87,22 +89,7 @@ MQTT.prototype.initMQTTClient = function () {
 	self.client = new MQTTClient(self.config.host, parseInt(self.config.port), mqttOptions);
 	self.client.onLog(function (msg) { self.log(msg.toString()); });
 	self.client.onError(function (error) { self.error(error.toString()); });
-	self.client.onDisconnect(function () {
-    	self.error("Disconnected, will retry to connect...");
-
-        // Reset connecting flag
-        if (self.isConnecting === true) self.isConnecting = false;
-
-        // Setup a connection retry
-		self.reconnect_timer = setTimeout(function() {
-                                    if (self.isConnecting === true) return;
-
-                                    self.log("Trying to reconnect (" + self.reconnectCount + ")");
-
-                                    self.reconnectCount++;
-                                    self.initMQTTClient();
-                                }, Math.min(self.reconnectCount * 1000, 60000));
-	});
+	self.client.onDisconnect(function () { self.onDisconnect(); });
 
 	self.client.connect(function () {
 		self.log("Connected to " + self.config.host);
@@ -144,6 +131,25 @@ MQTT.prototype.initMQTTClient = function () {
 			});
 		});
 	});
+};
+
+MQTT.prototype.onDisconnect = function () {
+	var self = this;
+
+	self.error("Disconnected, will retry to connect...");
+
+	// Reset connecting flag
+	if (self.isConnecting === true) self.isConnecting = false;
+
+	// Setup a connection retry
+	self.reconnect_timer = setTimeout(function() {
+		if (self.isConnecting === true) return;
+
+		self.log("Trying to reconnect (" + self.reconnectCount + ")");
+
+		self.reconnectCount++;
+		self.initMQTTClient();
+	}, Math.min(self.reconnectCount * 1000, 60000));
 };
 
 MQTT.prototype.updateDevice = function (device) {
