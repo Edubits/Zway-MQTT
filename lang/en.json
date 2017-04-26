@@ -14,6 +14,8 @@
 	"topic_postfix_status_helper": "Publish an empty message to the status-topic of a device to force a publication of the status",
 	"topic_postfix_set_label": "Topic postfix for setting the value",
 	"topic_postfix_set_helper": "Publish a message to the set-topic of a device to set it's value",
+	"ignore_label": "Ignore duplicate values",
+	"ignore_helper": "Uncheck this to send MQTT message on all events not only when value has changed",
 
 	"publications_label": "Publications",
 	"publications_helper": "Configure for which devices the status will be published to a MQTT topic",
