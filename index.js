@@ -143,7 +143,7 @@ MQTT.prototype.onDisconnect = function () {
 
 	// Setup a connection retry
 	self.reconnect_timer = setTimeout(function() {
-		if (self.isConnecting === true) return;
+		if (self.isConnecting === true || self.connected === true) return;
 
 		self.log("Trying to reconnect (" + self.reconnectCount + ")");
 
