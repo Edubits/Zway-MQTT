@@ -52,10 +52,10 @@ following parts:
 * Topic Prefix – The start of each topic
 * Topic – Per publication defined topic
 
-In each of these you can use `%deviceName` and `%roomName%` as variables.
-For example having `Foo/bar` as prefix and `%roomName%/%deviceName` as 
+In each of these you can use `%deviceName%` and `%roomName%` as variables.
+For example having `Foo/bar` as prefix and `%roomName%/%deviceName%` as 
 topic can result in a message published on the topic 
-`Foo/bar/livingRoom/dimmer`. Both `%deviceName` and `%roomName%` will be
+`Foo/bar/livingRoom/dimmer`. Both `%deviceName%` and `%roomName%` will be
 camelcased.
 
 ## Interacting through MQTT
