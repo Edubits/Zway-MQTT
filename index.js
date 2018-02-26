@@ -149,6 +149,11 @@ MQTT.prototype.onDisconnect = function () {
 			return;
 		}
 
+		if (self.connected === true) {
+			self.log("Connection already open, cancelling reconnect");
+			return;
+		}
+
 		self.log("Trying to reconnect (" + self.reconnectCount + ")");
 
 		self.reconnectCount++;
