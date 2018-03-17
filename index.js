@@ -68,6 +68,12 @@ MQTT.prototype.stop = function () {
 	self.client.close();
 	self.client.onDisconnect(function () { self.onDisconnect(); });
 	
+	// Clear any active reconnect timers
+	if (self.reconnect_timer) {
+		clearTimeout(self.reconnect_timer);
+		self.reconnect_timer = null;
+	}
+
 	MQTT.super_.prototype.stop.call(this);
 };
 
