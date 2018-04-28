@@ -3,6 +3,8 @@
 	"m_descr" : "Publishes the status of devices to a MQTT topic and is able to set values based on subscribed topics.",
 
 	"client_id_label": "Client ID",
+	"client_id_randomize_label": "Randomize client ID",
+	"client_id_randomize_helper": "Only needed for some MQTT brokers",
 	"host_label": "Hostname or IP address",
 	"port_label": "Port",
 	"user_label": "Username",

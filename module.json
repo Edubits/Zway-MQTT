@@ -5,6 +5,7 @@
 		"title": "__m_title__",
 		"description": "__m_descr__",
 		"clientId": "zway",
+		"clientIdRandomize": false,
 		"host": "localhost",
 		"port": "1883",
 		"user": "none",
@@ -12,7 +13,7 @@
 		"topicPrefix": "zway",
 		"topicPostfixStatus": "status",
 		"topicPostfixSet": "set",
-		"ignore":true
+		"ignore": true
 	},
 	"dependencies": [
 		"BaseModule"
@@ -33,47 +34,52 @@
 				"label": "__client_id_label__",
 				"order": 1
 			},
+			"clientIdRandomize": {
+				"label": "__client_id_randomize_label__",
+				"helper": "__client_id_randomize_helper__",
+				"order": 2
+			},
 			"host": {
 				"label": "__host_label__",
-				"order": 2
+				"order": 3
 			},
 			"port": {
 				"label": "__port_label__",
-				"order": 3
+				"order": 4
 			},
 			"user": {
 				"label": "__user_label__",
 				"helper": "__user_helper__",
-				"order": 4
+				"order": 5
 			},
 			"password": {
 				"label": "__password_label__",
 				"helper": "__password_helper__",
-				"order": 5
+				"order": 6
 			},
 			"topicPrefix": {
 				"label": "__topic_prefix_label__",
-				"order": 6
+				"order": 7
 			},
 			"topicPostfixStatus": {
 				"label": "__topic_postfix_status_label__",
 				"helper": "__topic_postfix_status_helper__",
-				"order": 7
+				"order": 8
 			},
 			"topicPostfixSet": {
 				"label": "__topic_postfix_set_label__",
 				"helper": "__topic_postfix_set_helper__",
-				"order": 8
+				"order": 9
 			},
 			"ignore": {
 				"label": "__ignore_label__",
 				"helper": "__ignore_helper__",
-				"order": 9
+				"order": 10
 			},
 		 	"publications": {
 				"label": "__publications_label__",
 				"helper": "__publications_helper__",
-				"order": 10,
+				"order": 11,
 				"items": {
 					"fields": {
 						"type": {
@@ -131,6 +137,10 @@
 		"properties": {
 			"clientId": {
 				"type": "string",
+				"required": true
+			},
+			"clientIdRandomize": {
+				"type": "boolean",
 				"required": true
 			},
 			"host": {

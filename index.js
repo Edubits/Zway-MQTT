@@ -85,6 +85,10 @@ MQTT.prototype.setupMQTTClient = function () {
 	var self = this;
 
 	var mqttOptions = {client_id: self.config.clientId};
+
+	if (self.config.clientIdRandomize)
+		mqttOptions.client_id += "-" + Math.random().toString(16).substr(2, 6);
+
 	if (self.config.user != "none")
 		mqttOptions.username = self.config.user;
 
@@ -99,7 +103,7 @@ MQTT.prototype.setupMQTTClient = function () {
 	self.client.onDisconnect(function () { self.onDisconnect(); });
 
 	self.client.onConnect(function () {
-		self.log("Connected to " + self.config.host);
+		self.log("Connected to " + self.config.host + " as " + self.client.options.client_id);
 
 		self.isConnecting = false;
 		self.reconnectCount = 0;
