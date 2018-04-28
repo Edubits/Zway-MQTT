@@ -39,12 +39,14 @@ MQTT.prototype.init = function (config) {
 	executeFile(self.moduleBasePath() + "/lib/buffer.js");
 	executeFile(self.moduleBasePath() + "/lib/mqtt.js");
 
+    // Init MQTT client
+	self.setupMQTTClient();
+
     // Default counters
 	self.reconnectCount = 0;
-
-    // Init MQTT client
-	self.initMQTTClient();
-
+    self.isConnecting = true;
+	self.client.connect();		
+	
 	var event = self.config.ignore ? "change:metrics:level" : "modify:metrics:level";
 	self.callback = _.bind(self.updateDevice, self);
 	self.controller.devices.on(event, self.callback);
@@ -62,9 +64,15 @@ MQTT.prototype.stop = function () {
 	self.controller.devices.off("change:metrics:level", self.callbackToggle);
 
 	// Cleanup
-	self.client.onDisconnect = undefined;
+	self.client.onDisconnect(function () {});
 	self.client.close();
-	self.client.onDisconnect = function () { self.onDisconnect(); };
+	self.client.onDisconnect(function () { self.onDisconnect(); });
+	
+	// Clear any active reconnect timers
+	if (self.reconnect_timer) {
+		clearTimeout(self.reconnect_timer);
+		self.reconnect_timer = null;
+	}
 
 	MQTT.super_.prototype.stop.call(this);
 };
@@ -73,9 +81,8 @@ MQTT.prototype.stop = function () {
 // --- Module methods
 // ----------------------------------------------------------------------------
 
-MQTT.prototype.initMQTTClient = function () {
+MQTT.prototype.setupMQTTClient = function () {
 	var self = this;
-    self.isConnecting = true;
 
 	var mqttOptions = {client_id: self.config.clientId};
 	if (self.config.user != "none")
@@ -91,7 +98,7 @@ MQTT.prototype.initMQTTClient = function () {
 	self.client.onError(function (error) { self.error(error.toString()); });
 	self.client.onDisconnect(function () { self.onDisconnect(); });
 
-	self.client.connect(function () {
+	self.client.onConnect(function () {
 		self.log("Connected to " + self.config.host);
 
 		self.isConnecting = false;
@@ -143,12 +150,23 @@ MQTT.prototype.onDisconnect = function () {
 
 	// Setup a connection retry
 	self.reconnect_timer = setTimeout(function() {
-		if (self.isConnecting === true || self.connected === true) return;
+		if (self.isConnecting === true) {
+			self.log("Connection already in progress, cancelling reconnect");
+			return;
+		}
+
+		if (self.connected === true) {
+			self.log("Connection already open, cancelling reconnect");
+			return;
+		}
 
 		self.log("Trying to reconnect (" + self.reconnectCount + ")");
 
 		self.reconnectCount++;
-		self.initMQTTClient();
+		self.isConnecting = true;
+		self.client.connect();
+
+		self.log("Reconnect attempt finished");
 	}, Math.min(self.reconnectCount * 1000, 60000));
 };
 
