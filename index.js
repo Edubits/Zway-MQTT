@@ -18,7 +18,7 @@ Description:
 // ----------------------------------------------------------------------------
 
 function MQTT (id, controller) {
-    MQTT.super_.call(this, id, controller);
+	MQTT.super_.call(this, id, controller);
 }
 
 inherits(MQTT, BaseModule);
@@ -30,19 +30,19 @@ _module = MQTT;
 // ----------------------------------------------------------------------------
 
 MQTT.prototype.init = function (config) {
-    // Call superclass' init (this will process config argument and so on)
-    MQTT.super_.prototype.init.call(this, config);
+	// Call superclass' init (this will process config argument and so on)
+	MQTT.super_.prototype.init.call(this, config);
 
-    var self = this;
+	var self = this;
 
-    // Imports
+	// Imports
 	executeFile(self.moduleBasePath() + "/lib/buffer.js");
 	executeFile(self.moduleBasePath() + "/lib/mqtt.js");
 
-    // Init MQTT client
+	// Init MQTT client
 	self.setupMQTTClient();
 
-    // Default counters
+	// Default counters
 	self.reconnectCount = 0;
 	self.isStopping = false;
 	self.isConnected = false;
