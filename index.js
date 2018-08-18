@@ -88,7 +88,7 @@ MQTT.prototype.setupMQTTClient = function () {
 		client_id: self.config.clientId,
 		will_flag: true,
 		will_topic: self.createTopic("/connected"),
-		will_message: "2",
+		will_message: "0",
 		will_retain: true
 	};
 
