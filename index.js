@@ -84,7 +84,13 @@ MQTT.prototype.stop = function () {
 MQTT.prototype.setupMQTTClient = function () {
 	var self = this;
 
-	var mqttOptions = {client_id: self.config.clientId};
+	var mqttOptions = {
+		client_id: self.config.clientId,
+		will_flag: true,
+		will_topic: self.createTopic("/connected"),
+		will_message: "2",
+		will_retain: true
+	};
 
 	if (self.config.clientIdRandomize)
 		mqttOptions.client_id += "-" + Math.random().toString(16).substr(2, 6);
@@ -141,6 +147,9 @@ MQTT.prototype.setupMQTTClient = function () {
 				});
 			});
 		});
+
+		// Publish connected notification
+		self.client.publish(self.createTopic("/connected"), "2", true);
 	});
 };
 
