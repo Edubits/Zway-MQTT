@@ -159,6 +159,9 @@ MQTT.prototype.setupMQTTClient = function () {
 MQTT.prototype.onDisconnect = function () {
 	var self = this;
 
+	// Reset connected flag
+	if (self.isConnected === true) self.isConnected = false;
+
 	if (self.isStopping) {
 		self.log("Disconnected due to module stop, not reconnecting");
 		return;
@@ -168,7 +171,7 @@ MQTT.prototype.onDisconnect = function () {
 
 	// Reset connecting flag
 	if (self.isConnecting === true) self.isConnecting = false;
-
+	
 	// Setup a connection retry
 	self.reconnect_timer = setTimeout(function() {
 		if (self.isConnecting === true) {
