@@ -152,7 +152,7 @@ MQTT.prototype.setupMQTTClient = function () {
 		});
 
 		// Publish connected notification
-		self.client.publish(self.createTopic("/connected"), "2", true);
+		self.publish(self.createTopic("/connected"), "2", true);
 	});
 };
 
