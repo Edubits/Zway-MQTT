@@ -18,7 +18,7 @@ Description:
 // ----------------------------------------------------------------------------
 
 function MQTT (id, controller) {
-    MQTT.super_.call(this, id, controller);
+	MQTT.super_.call(this, id, controller);
 }
 
 inherits(MQTT, BaseModule);
@@ -30,21 +30,23 @@ _module = MQTT;
 // ----------------------------------------------------------------------------
 
 MQTT.prototype.init = function (config) {
-    // Call superclass' init (this will process config argument and so on)
-    MQTT.super_.prototype.init.call(this, config);
+	// Call superclass' init (this will process config argument and so on)
+	MQTT.super_.prototype.init.call(this, config);
 
-    var self = this;
+	var self = this;
 
-    // Imports
+	// Imports
 	executeFile(self.moduleBasePath() + "/lib/buffer.js");
 	executeFile(self.moduleBasePath() + "/lib/mqtt.js");
 
-    // Init MQTT client
+	// Init MQTT client
 	self.setupMQTTClient();
 
-    // Default counters
+	// Default counters
 	self.reconnectCount = 0;
-    self.isConnecting = true;
+	self.isStopping = false;
+	self.isConnected = false;
+	self.isConnecting = true;
 	self.client.connect();		
 	
 	var event = self.config.ignore ? "change:metrics:level" : "modify:metrics:level";
@@ -64,9 +66,8 @@ MQTT.prototype.stop = function () {
 	self.controller.devices.off("change:metrics:level", self.callbackToggle);
 
 	// Cleanup
-	self.client.onDisconnect(function () {});
+	self.isStopping = true;
 	self.client.close();
-	self.client.onDisconnect(function () { self.onDisconnect(); });
 	
 	// Clear any active reconnect timers
 	if (self.reconnect_timer) {
@@ -84,7 +85,13 @@ MQTT.prototype.stop = function () {
 MQTT.prototype.setupMQTTClient = function () {
 	var self = this;
 
-	var mqttOptions = {client_id: self.config.clientId};
+	var mqttOptions = {
+		client_id: self.config.clientId,
+		will_flag: true,
+		will_topic: self.createTopic("/connected"),
+		will_message: "0",
+		will_retain: true
+	};
 
 	if (self.config.clientIdRandomize)
 		mqttOptions.client_id += "-" + Math.random().toString(16).substr(2, 6);
@@ -105,7 +112,9 @@ MQTT.prototype.setupMQTTClient = function () {
 	self.client.onConnect(function () {
 		self.log("Connected to " + self.config.host + " as " + self.client.options.client_id);
 
+		self.isConnected = true;
 		self.isConnecting = false;
+		self.isStopping = false;
 		self.reconnectCount = 0;
 
 		self.client.subscribe(self.createTopic("/#"), {}, function (topic, payload) {
@@ -141,17 +150,28 @@ MQTT.prototype.setupMQTTClient = function () {
 				});
 			});
 		});
+
+		// Publish connected notification
+		self.publish(self.createTopic("/connected"), "2", true);
 	});
 };
 
 MQTT.prototype.onDisconnect = function () {
 	var self = this;
 
-	self.error("Disconnected, will retry to connect...");
+	// Reset connected flag
+	if (self.isConnected === true) self.isConnected = false;
 
 	// Reset connecting flag
 	if (self.isConnecting === true) self.isConnecting = false;
 
+	if (self.isStopping) {
+		self.log("Disconnected due to module stop, not reconnecting");
+		return;
+	}
+
+	self.error("Disconnected, will retry to connect...");
+	
 	// Setup a connection retry
 	self.reconnect_timer = setTimeout(function() {
 		if (self.isConnecting === true) {
@@ -159,7 +179,7 @@ MQTT.prototype.onDisconnect = function () {
 			return;
 		}
 
-		if (self.connected === true) {
+		if (self.isConnected === true) {
 			self.log("Connection already open, cancelling reconnect");
 			return;
 		}
