@@ -68,7 +68,7 @@ MQTT.prototype.stop = function () {
 	// Cleanup
 	self.isStopping = true;
 	self.client.close();
-	
+
 	// Clear any active reconnect timers
 	if (self.reconnect_timer) {
 		clearTimeout(self.reconnect_timer);
