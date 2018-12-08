@@ -1,0 +1,8 @@
+{
+  "name": "Zway-MQTT",
+  "devDependencies": {
+    "grunt": "~1.0.3",
+    "grunt-bump": "^0.8.0",
+    "grunt-contrib-compress": "~1.4.3"
+  }
+}

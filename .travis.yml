@@ -1,0 +1,20 @@
+language: node_js
+node_js:
+- node
+
+before_install:
+  - export DISPLAY=:99.0
+  - sh -e /etc/init.d/xvfb start
+  - npm install -g grunt-cli
+
+after_success: grunt compress
+
+deploy:
+  provider: releases
+  api_key:
+    secure: cVxh1lOW6twEjm8mr8AxwIi4jzjJ8iPbZp3MvxEsL5oeWMiZoXXu4GZvVYrR5hn1lQsOqlAcua1CVpuPzZiA6RJz8DGgoCAm02I37njpP6lHhH8hY4j2N6Sr5itKb+i29hVgfTS06DquR5oCWSBwQ81eEv6y90MTY79koLkhWDpsc27SL+Pq8dziZMXRxJ4QU05LCZYzT0KupSez63GvXghJnZiZ7BrzpLBPe2FqtN4TV7BC2ILaydaM5Z6Vd+RGHZNneF4nHx0WFhx+AfJ2gXeHRaDVdVrfTlG9ZojnTQBrO1B7fZbedJwXco92tWQWZeBTF4ozcxKRoIvBaBVzNXZ/iuYyMLueIa4zwuCbkH6CIVEQhbS8VdCfk/kr3077qaLKdAkL43SFZyPx2WYkpX+S55Z8e/XkcTGRSYKaxBmrSlFJU9FA7aM7NtyhoNr/E/NKlTMgMRzBlZH7gqmAfDSWzrCvlLiqy7GJVGZMDwqmtlHCzD1GCUkQVDAaBKN2MfskevbOn7YVEDE4eCryx8VoJgPdwbOx/70N2nu530fiMhPp39P1aLhoJzxbRjD8Aosj7jJNh4O6Qf+O0JsZExqSaElPICF+YEW/iujszCKQ0IBlhTKyPRNWkMR1ep2kX2k3c8/dfuaqTvz0mD5fl5jm8aHftkEtEH2BnhVySzU=
+  file: out/Zway-MQTT.tar.gz
+  skip_cleanup: true
+  on:
+    repo: Edubits/Zway-MQTT
+    tags: true
