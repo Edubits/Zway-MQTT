@@ -284,7 +284,8 @@ MQTT.prototype.createTopic = function (pattern, device) {
 	if (device != undefined) {
 		topicParts = topicParts.map(function (part) {
 			return part.replace("%roomName%", self.findRoom(device.get("location")).title.toCamelCase())
-					   .replace("%deviceName%", device.get("metrics:title").toCamelCase());
+					   .replace("%deviceName%", device.get("metrics:title").toCamelCase())
+             .replace("%deviceId%", device.id.toString(16));
 
 			return part;
 		});

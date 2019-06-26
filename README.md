@@ -52,11 +52,11 @@ following parts:
 * Topic Prefix – The start of each topic
 * Topic – Per publication defined topic
 
-In each of these you can use `%deviceName%` and `%roomName%` as variables.
-For example having `Foo/bar` as prefix and `%roomName%/%deviceName%` as 
-topic can result in a message published on the topic 
-`Foo/bar/livingRoom/dimmer`. Both `%deviceName%` and `%roomName%` will be
-camelcased.
+In each of these you can use `%deviceId%`, `%deviceName%` and `%roomName%`
+as variables. For example having `Foo/bar` as prefix and
+`%roomName%/%deviceName%` as topic can result in a message published on the
+topic `Foo/bar/livingRoom/dimmer`. Both `%deviceName%` and `%roomName%` will
+be camelcased.
 
 ## Interacting through MQTT
 
@@ -66,9 +66,9 @@ the two postfixes are used:
 * Status postfix (default: status)
 * Set postfix (default: set)
 
-Taking the same example as before, when you publish an empty message to 
+Taking the same example as before, when you publish an empty message to
 `Foo/bar/livingRoom/dimmer/status` the current value will be published
-again. When you publish a value (for example `on`, `off` or `87`) to 
+again. When you publish a value (for example `on`, `off` or `87`) to
 `Foo/bar/livingRoom/dimmer/set` the dimmer will be set to that level.
 
 # Acknowledgements
