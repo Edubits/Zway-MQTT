@@ -250,6 +250,9 @@ MQTT.prototype.processPublicationsForDevice = function (device, callback) {
 
 	_.each(self.config.publications, function (publication) {
 		switch (publication.type) {
+  		case "all":
+				callback(device, publication);
+  			break;
 			case "tag":
 				if (_.intersection(publication.tags, device.get("tags")).length > 0) {
 					callback(device, publication);
