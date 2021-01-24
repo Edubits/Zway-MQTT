@@ -32,6 +32,6 @@
 	"tags_label": "Tags",
 	"tags_helper": "All devices with this tag will be used",
 	"topic_label": "Topic",
-	"topic_helper": "You can use %deviceName% and %roomName% to get those automatically filled in. The names will camel cased.",
+	"topic_helper": "You can use %deviceId%, %deviceName% and %roomName% to get those automatically filled in. The names will camel cased.",
 	"retained_label": "Retained?"
 }
