@@ -134,12 +134,12 @@ MQTT.prototype.setupMQTTClient = function () {
 					if (topic == deviceTopic + "/" + self.config.topicPostfixSet) {
 						var deviceType = device.get('deviceType');
 
-						if (deviceType.startsWith("sensor")) {
+						if (deviceType === "sensorMultilevel") {
+							device.set("metrics:level", payload);
+						} else if (deviceType.startsWith("sensor")) {
 							self.error("Can't perform action on sensor " + device.get("metrics:title"));
 							return;
-						}
-
-						if (deviceType === "switchMultilevel" && payload !== "on" && payload !== "off" && payload !== "stop") {
+						} else if (deviceType === "switchMultilevel" && payload !== "on" && payload !== "off" && payload !== "stop") {
 							device.performCommand("exact", {level: payload + "%"});
 						} else if (deviceType === "thermostat") {
 							device.performCommand("exact", {level: payload});
