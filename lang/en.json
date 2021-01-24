@@ -24,6 +24,7 @@
 
 	"type_label": "Type",
 	"type_choose": "Choose the type of publication",
+	"type_all": "All devices",
 	"type_single": "Single device",
 	"type_tag": "Tagged devices",
 

@@ -13,7 +13,10 @@
 		"topicPrefix": "zway",
 		"topicPostfixStatus": "status",
 		"topicPostfixSet": "set",
-		"ignore": true
+		"ignore": true,
+    "publications": [
+      { "type": "all", "topic": "%deviceId%" }
+    ]
 	},
 	"dependencies": [
 		"BaseModule"
@@ -86,6 +89,7 @@
 							"label" : "__type_label__",
 							"noneLabel" : "__type_choose__",
 							"optionLabels" : [
+								"__type_all__",
 								"__type_tag__",
 								"__type_single__"
 							],
@@ -183,6 +187,7 @@
 						"type" : {
 							"type" : "string",
 							"enum" : [
+                "all",
 								"tag",
 								"single"
 							],
