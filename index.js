@@ -47,8 +47,8 @@ MQTT.prototype.init = function (config) {
 	self.isStopping = false;
 	self.isConnected = false;
 	self.isConnecting = true;
-	self.client.connect();		
-	
+	self.client.connect();
+
 	var event = self.config.ignore ? "change:metrics:level" : "modify:metrics:level";
 	self.callback = _.bind(self.updateDevice, self);
 	self.controller.devices.on(event, self.callback);
@@ -102,7 +102,7 @@ MQTT.prototype.setupMQTTClient = function () {
 	if (self.config.password != "none")
 		mqttOptions.password = self.config.password;
 
-	// mqttOptions.infoLogEnabled = true;
+	mqttOptions.infoLogEnabled = true;
 
 	self.client = new MQTTClient(self.config.host, parseInt(self.config.port), mqttOptions);
 	self.client.onLog(function (msg) { self.log(msg.toString()); });
@@ -171,7 +171,7 @@ MQTT.prototype.onDisconnect = function () {
 	}
 
 	self.error("Disconnected, will retry to connect...");
-	
+
 	// Setup a connection retry
 	self.reconnect_timer = setTimeout(function() {
 		if (self.isConnecting === true) {
@@ -285,15 +285,16 @@ MQTT.prototype.createTopic = function (pattern, device) {
 		.concat(pattern.split("/"));
 
 	if (device != undefined) {
+		var roomName = self.findRoom(device.get("location")).title.split('#').join('');
+		var deviceName = device.get("metrics:title").split('#').join('');
+		var deviceId = device.id.toString(16).split('#').join('');
+//		self.log("Creating topic (roomName:" + roomName + ", deviceName: " + deviceName + ", deviceId: " + deviceId);
 		topicParts = topicParts.map(function (part) {
-			return part.replace("%roomName%", self.findRoom(device.get("location")).title.toCamelCase())
-					   .replace("%deviceName%", device.get("metrics:title").toCamelCase())
-             .replace("%deviceId%", device.id.toString(16));
-
-			return part;
+			return part.replace("%roomName%", roomName.toCamelCase())
+				   .replace("%deviceName%", deviceName.toCamelCase())
+				   .replace("%deviceId%", deviceId);
 		});
 	}
-
 	return topicParts.filter(function (part) {
 		return part !== undefined && part.length > 0;
 	}).join("/");
